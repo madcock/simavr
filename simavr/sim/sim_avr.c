@@ -25,6 +25,9 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#if defined(SF2000)
+#include <sys/times.h>
+#endif
 #include <sys/time.h>
 #include "sim_avr.h"
 #include "sim_core.h"
@@ -77,6 +80,7 @@ avr_get_time_stamp(
 		avr_t * avr )
 {
 	uint64_t stamp;
+#if !defined (SF2000)	
 #ifndef CLOCK_MONOTONIC_RAW
 	/* CLOCK_MONOTONIC_RAW isn't portable, here is the POSIX alternative.
 	 * Only downside is that it will drift if the system clock changes */
@@ -87,7 +91,10 @@ avr_get_time_stamp(
 	struct timespec tp;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &tp);
 	stamp = (tp.tv_sec * 1E9) + tp.tv_nsec;
-#endif
+#endif // CLOCK_MONOTONIC_RAW
+#else
+	stamp = 0;
+#endif // !defined (SF2000)
 	if (!avr->time_base)
 		avr->time_base = stamp;
 	return stamp - avr->time_base;
@@ -351,7 +358,9 @@ avr_callback_sleep_raw(
 	if (runtime_ns >= deadline_ns)
 		return;
 	uint64_t sleep_us = (deadline_ns - runtime_ns) / 1000;
+#if !defined (SF2000)
 	usleep(sleep_us);
+#endif
 	return;
 }
 

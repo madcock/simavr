@@ -34,7 +34,9 @@
 
 DEFINE_FIFO(avr_vcd_log_t, avr_vcd_fifo);
 
+#if !defined (SF2000)
 #define strdupa(__s) strcpy(alloca(strlen(__s)+1), __s)
+#endif
 
 static void
 _avr_vcd_notify(
@@ -316,7 +318,11 @@ avr_vcd_init_input(
 				vcd->signal[i].size);
 		/* format is <four-character ioctl>[_<IRQ index>] */
 		if (strlen(vcd->signal[i].name) >= 4) {
+#if !defined (SF2000)
 			char *dup = strdupa(vcd->signal[i].name);
+#else
+			char *dup = strdup(vcd->signal[i].name);
+#endif
 			char *ioctl = strsep(&dup, "_");
 			int index = 0;
 			if (dup)
@@ -337,6 +343,9 @@ avr_vcd_init_input(
 			AVR_LOG(vcd->avr, LOG_WARNING,
 					"%s is an invalid IRQ format\n",
 					vcd->signal[i].name);
+#if defined (SF2000)
+			free(dup);
+#endif
 		}
 	}
 	return 0;
