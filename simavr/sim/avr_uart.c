@@ -155,9 +155,11 @@ avr_uart_status_read(
 		uint8_t ti = !avr_regbit_get(avr, p->txen) || !avr_regbit_get(avr, p->txc.raised);
 
 		if (p->flags & AVR_UART_FLAG_POLL_SLEEP) {
-#if !defined (SF2000)
 			if (ri && ti)
+#if !defined (SF2000)
 				usleep(1);
+#else
+				dly_tsk(1);
 #endif
 		}
 		// if reception is idle and the fifo is empty, tell whomever there is room
